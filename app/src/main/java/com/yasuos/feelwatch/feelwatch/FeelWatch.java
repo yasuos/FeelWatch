@@ -21,10 +21,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -32,6 +35,8 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
 import android.view.SurfaceHolder;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
 import java.util.TimeZone;
@@ -47,6 +52,8 @@ public class FeelWatch extends CanvasWatchFaceService {
      * second hand.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+
 
     /**
      * Handler message id for updating the time periodically in interactive mode.
@@ -94,6 +101,13 @@ public class FeelWatch extends CanvasWatchFaceService {
         };
         int mTapCount;
 
+        float mXOffset;
+        float mYOffset;
+        Paint mTextPaint;
+
+        //int mNumRes[10];
+
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -113,9 +127,25 @@ public class FeelWatch extends CanvasWatchFaceService {
 
             Resources resources = FeelWatch.this.getResources();
 
+            mTextPaint = new Paint();
+            mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
+
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
 
+            mYOffset = resources.getDimension(R.dimen.digital_y_offset);
+/*
+            mNumRes[0] = R.drawable.white_c0;
+            mNumRes[1] = R.drawable.white_c1;
+            mNumRes[2] = R.drawable.white_c2;
+            mNumRes[3] = R.drawable.white_c3;
+            mNumRes[4] = R.drawable.white_c4;
+            mNumRes[5] = R.drawable.white_c5;
+            mNumRes[6] = R.drawable.white_c6;
+            mNumRes[7] = R.drawable.white_c7;
+            mNumRes[8] = R.drawable.white_c8;
+            mNumRes[9] = R.drawable.white_c9;
+*/
             mHandPaint = new Paint();
             mHandPaint.setColor(resources.getColor(R.color.analog_hands));
             mHandPaint.setStrokeWidth(resources.getDimension(R.dimen.analog_hand_stroke));
@@ -125,11 +155,35 @@ public class FeelWatch extends CanvasWatchFaceService {
             mTime = new Time();
         }
 
+        private Paint createTextPaint(int textColor) {
+            Paint paint = new Paint();
+            paint.setColor(textColor);
+            paint.setTypeface(NORMAL_TYPEFACE);
+            paint.setAntiAlias(true);
+            return paint;
+        }
+
         @Override
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             super.onDestroy();
         }
+
+        @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            super.onApplyWindowInsets(insets);
+
+            // Load resources that have alternate values for round watches.
+            Resources resources = FeelWatch.this.getResources();
+            boolean isRound = insets.isRound();
+            mXOffset = resources.getDimension(isRound
+                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
+            float textSize = resources.getDimension(isRound
+                    ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
+
+            mTextPaint.setTextSize(textSize);
+        }
+
 
         @Override
         public void onPropertiesChanged(Bundle properties) {
@@ -194,6 +248,57 @@ public class FeelWatch extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), mBackgroundPaint);
             }
 
+            // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
+            mTime.setToNow();
+            /*
+            String text = mAmbient
+                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
+                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
+           */
+            int c = bounds.width() / 2;
+            int h1, h2, m1, m2;
+
+            h1 = c - 90;
+            h2 = c - 47;
+            m1 = c + 10;
+            m2 = c + 53;
+
+            // 時
+            Bitmap hour1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c1 );
+            Bitmap hour2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c2 );
+
+            canvas.drawBitmap( hour1, m1, mYOffset - ( hour1.getHeight() + 10), (Paint)null);
+            canvas.drawBitmap( hour2, m2, mYOffset - ( hour2.getHeight() + 10), (Paint)null);
+
+            // 分
+            Bitmap minu1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c3 );
+            Bitmap minu2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c4 );
+
+            canvas.drawBitmap( minu1, m1, mYOffset, (Paint)null);
+            canvas.drawBitmap( minu2, m2, mYOffset, (Paint)null);
+
+            // 午前・午後
+            Bitmap ampm = BitmapFactory.decodeResource( getResources(), R.drawable.white_f_am );
+
+            canvas.drawBitmap( ampm, c - (ampm.getWidth()+10), mYOffset - ( ampm.getHeight() + 10 ), (Paint)null);
+
+
+
+/*
+            String text = String.format( "%d", 1 );
+            canvas.drawText(text, h1, mYOffset, mTextPaint);
+            text = String.format( "%d", 2 );
+            canvas.drawText(text, h2, mYOffset, mTextPaint);
+
+            text = String.format( "%d", 3 );
+            canvas.drawText(text, m1, mYOffset, mTextPaint);
+            text = String.format( "%d", 4 );
+            canvas.drawText(text, m2, mYOffset, mTextPaint);
+*/
+
+            return;
+
+        /*
             // Find the center. Ignore the window insets so that, on round watches with a
             // "chin", the watch face is centered on the entire screen, not just the usable
             // portion.
@@ -222,6 +327,7 @@ public class FeelWatch extends CanvasWatchFaceService {
             float hrX = (float) Math.sin(hrRot) * hrLength;
             float hrY = (float) -Math.cos(hrRot) * hrLength;
             canvas.drawLine(centerX, centerY, centerX + hrX, centerY + hrY, mHandPaint);
+        */
         }
 
         @Override
