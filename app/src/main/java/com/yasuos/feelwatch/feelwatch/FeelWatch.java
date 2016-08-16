@@ -257,30 +257,39 @@ public class FeelWatch extends CanvasWatchFaceService {
                     ? String.format("%d:%02d", mTime.hour, mTime.minute)
                     : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
            */
-            int c = bounds.width() / 2;
+            int msRes[] = {
+                    R.drawable.white_c0, R.drawable.white_c1, R.drawable.white_c2,
+                    R.drawable.white_c3, R.drawable.white_c4, R.drawable.white_c5,
+                    R.drawable.white_c6, R.drawable.white_c7, R.drawable.white_c8,
+                    R.drawable.white_c9
+                };
+            int c = ( bounds.width() / 2 ) - 40;
+
             int m1, m2;
 
             m1 = c + 10;
             m2 = c + 53;
 
             // 時
-            Bitmap hour1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
-            Bitmap hour2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
+            Bitmap hour1 = BitmapFactory.decodeResource(getResources(), msRes[mTime.hour / 10] );
+            Bitmap hour2 = BitmapFactory.decodeResource(getResources(), msRes[mTime.hour % 10] );
 
             canvas.drawBitmap( hour1, m1, mYOffset - ( hour1.getHeight() + 10), (Paint)null);
             canvas.drawBitmap( hour2, m2, mYOffset - ( hour2.getHeight() + 10), (Paint)null);
 
             // 分
-            Bitmap minu1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
-            Bitmap minu2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
+            Bitmap minu1 = BitmapFactory.decodeResource(getResources(), msRes[mTime.minute / 10] );
+            Bitmap minu2 = BitmapFactory.decodeResource(getResources(), msRes[mTime.minute % 10] );
 
             canvas.drawBitmap( minu1, m1, mYOffset, (Paint)null);
             canvas.drawBitmap( minu2, m2, mYOffset, (Paint)null);
 
             // 曜日
-            int wDayRes[] = { R.drawable.white_w_sun, R.drawable.white_w_mon, R.drawable.white_w_thu,
+            int wDayRes[] = {
+                    R.drawable.white_w_sun, R.drawable.white_w_mon, R.drawable.white_w_thu,
                     R.drawable.white_w_wed, R.drawable.white_w_thu, R.drawable.white_w_fri,
-                    R.drawable.white_w_sat };
+                    R.drawable.white_w_sat
+                };
             Bitmap wday = BitmapFactory.decodeResource( getResources(), wDayRes[mTime.weekDay] );
 
             canvas.drawBitmap( wday, c - (wday.getWidth()+10), mYOffset - ( wday.getHeight() + 10 ), (Paint)null);
@@ -293,10 +302,12 @@ public class FeelWatch extends CanvasWatchFaceService {
                     (Paint)null);
 
             // 秒針
-            int ssRes[] = {R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
+            int ssRes[] = {
+                    R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
                     R.drawable.white_s3, R.drawable.white_s4, R.drawable.white_s5,
                     R.drawable.white_s6, R.drawable.white_s7, R.drawable.white_s8,
-                    R.drawable.white_s9,};
+                    R.drawable.white_s9
+                };
             int ss[] = {mTime.second / 10, mTime.second % 10};
 
             Bitmap ss1 = BitmapFactory.decodeResource(getResources(), ssRes[ss[0]] );
@@ -315,12 +326,14 @@ public class FeelWatch extends CanvasWatchFaceService {
 
             // 日付
             Bitmap mm1, mm2, dd1, dd2;
-            int smallNumRes[] = {R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
+            int smallNumRes[] = {
+                    R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
                     R.drawable.white_s3, R.drawable.white_s4, R.drawable.white_s5,
                     R.drawable.white_s6, R.drawable.white_s7, R.drawable.white_s8,
-                    R.drawable.white_s9 };
+                    R.drawable.white_s9
+                };
             int mm = mTime.month + 1;
-            mm1 = null;
+
             if(( mm / 10 ) >= 1 ) {
                 mm1 = BitmapFactory.decodeResource(getResources(), smallNumRes[1] );
             } else {
@@ -353,8 +366,8 @@ public class FeelWatch extends CanvasWatchFaceService {
                 canvas.drawBitmap(mm2, xx, yy, (Paint) null);
             }
 
+            xx = xx - ( mm2.getWidth() + 5 );
             if( mm1 != null ) {
-                xx = xx - ( mm1.getWidth() + 5 );
                 canvas.drawBitmap(mm1, xx, yy, (Paint) null);
             }
 /*
