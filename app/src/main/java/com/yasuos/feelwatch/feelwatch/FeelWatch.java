@@ -34,11 +34,13 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
+import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -256,34 +258,105 @@ public class FeelWatch extends CanvasWatchFaceService {
                     : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
            */
             int c = bounds.width() / 2;
-            int h1, h2, m1, m2;
+            int m1, m2;
 
-            h1 = c - 90;
-            h2 = c - 47;
             m1 = c + 10;
             m2 = c + 53;
 
             // 時
-            Bitmap hour1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c1 );
-            Bitmap hour2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c2 );
+            Bitmap hour1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
+            Bitmap hour2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
 
             canvas.drawBitmap( hour1, m1, mYOffset - ( hour1.getHeight() + 10), (Paint)null);
             canvas.drawBitmap( hour2, m2, mYOffset - ( hour2.getHeight() + 10), (Paint)null);
 
             // 分
-            Bitmap minu1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c3 );
-            Bitmap minu2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c4 );
+            Bitmap minu1 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
+            Bitmap minu2 = BitmapFactory.decodeResource(getResources(), R.drawable.white_c9 );
 
             canvas.drawBitmap( minu1, m1, mYOffset, (Paint)null);
             canvas.drawBitmap( minu2, m2, mYOffset, (Paint)null);
 
+            // 曜日
+            int wDayRes[] = { R.drawable.white_w_sun, R.drawable.white_w_mon, R.drawable.white_w_thu,
+                    R.drawable.white_w_wed, R.drawable.white_w_thu, R.drawable.white_w_fri,
+                    R.drawable.white_w_sat };
+            Bitmap wday = BitmapFactory.decodeResource( getResources(), wDayRes[mTime.weekDay] );
+
+            canvas.drawBitmap( wday, c - (wday.getWidth()+10), mYOffset - ( wday.getHeight() + 10 ), (Paint)null);
+
             // 午前・午後
             Bitmap ampm = BitmapFactory.decodeResource( getResources(), R.drawable.white_f_am );
+            canvas.drawBitmap( ampm,
+                    ( m2 + minu2.getWidth() + 15 ),
+                    ( mYOffset - ( ampm.getHeight() + 10 )),
+                    (Paint)null);
 
-            canvas.drawBitmap( ampm, c - (ampm.getWidth()+10), mYOffset - ( ampm.getHeight() + 10 ), (Paint)null);
+            // 秒針
+            int ssRes[] = {R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
+                    R.drawable.white_s3, R.drawable.white_s4, R.drawable.white_s5,
+                    R.drawable.white_s6, R.drawable.white_s7, R.drawable.white_s8,
+                    R.drawable.white_s9,};
+            int ss[] = {mTime.second / 10, mTime.second % 10};
+
+            Bitmap ss1 = BitmapFactory.decodeResource(getResources(), ssRes[ss[0]] );
+            Bitmap ss2 = BitmapFactory.decodeResource(getResources(), ssRes[ss[1]] );
 
 
+            canvas.drawBitmap( ss1,
+                    ( m2 + minu2.getWidth() + 15 ),
+                    ( mYOffset + ( minu2.getHeight() - ss1.getHeight()) ),
+                    (Paint)null);
+            canvas.drawBitmap( ss2,
+                    ( m2 + minu2.getWidth() + ss1.getWidth() + 20 ),
+                    ( mYOffset + ( minu2.getHeight() - ss1.getHeight()) ),
+                    (Paint)null);
 
+
+            // 日付
+            Bitmap mm1, mm2, dd1, dd2;
+            int smallNumRes[] = {R.drawable.white_s0, R.drawable.white_s1, R.drawable.white_s2,
+                    R.drawable.white_s3, R.drawable.white_s4, R.drawable.white_s5,
+                    R.drawable.white_s6, R.drawable.white_s7, R.drawable.white_s8,
+                    R.drawable.white_s9 };
+            int mm = mTime.month + 1;
+            mm1 = null;
+            if(( mm / 10 ) >= 1 ) {
+                mm1 = BitmapFactory.decodeResource(getResources(), smallNumRes[1] );
+            } else {
+                mm1 = null;
+            }
+            mm2 = BitmapFactory.decodeResource(getResources(), smallNumRes[mm % 10] );
+
+            if((mTime.monthDay / 10 ) >= 1 ) {
+                dd1 = BitmapFactory.decodeResource(getResources(), smallNumRes[mTime.monthDay/10] );
+            } else {
+                dd1 = null;
+            }
+            dd2 = BitmapFactory.decodeResource(getResources(), smallNumRes[mTime.monthDay % 10] );
+
+            int xx, yy;
+
+            yy = ((int)mYOffset + minu1.getHeight()) - dd2.getHeight();
+            xx = c - ( dd2.getWidth() + 15 );
+            if( dd2 != null ) {
+                canvas.drawBitmap(dd2, xx, yy, (Paint) null);
+            }
+
+            xx = xx - ( dd2.getWidth() + 5 );
+            if( dd1 != null ) {
+                canvas.drawBitmap(dd1, xx, yy, (Paint) null);
+            }
+
+            xx = xx - ( mm2.getWidth() + 15 );
+            if( mm2 != null ) {
+                canvas.drawBitmap(mm2, xx, yy, (Paint) null);
+            }
+
+            if( mm1 != null ) {
+                xx = xx - ( mm1.getWidth() + 5 );
+                canvas.drawBitmap(mm1, xx, yy, (Paint) null);
+            }
 /*
             String text = String.format( "%d", 1 );
             canvas.drawText(text, h1, mYOffset, mTextPaint);
